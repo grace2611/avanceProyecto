@@ -1,81 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const searchButton = document.getElementById('searchButton');
-    const searchInput = document.getElementById('searchInput');
+    // Obtén datos de la API
+    fetch('https://api.rawg.io/api/games?key=YOUR_API_KEY&ordering=rating&page_size=3')
+        .then(response => response.json())
+        .then(data => {
+            const cardElements = document.querySelectorAll('.card');
 
-    searchButton.addEventListener('click', function () {
-        const searchTerm = searchInput.value;
-        // Aquí puedes realizar la acción de búsqueda, por ejemplo, redirigir a una página de resultados.
-        alert('Buscando: ' + searchTerm);
-    });
+            // Llena las tarjetas con datos de la API
+            for (let i = 0; i < cardElements.length; i++) {
+                const card = cardElements[i];
+                const game = data.results[i];
+
+                card.innerHTML = `
+                    <h2>${game.name}</h2>
+                    <p>Género: ${game.genres.map(genre => genre.name).join(', ')}</p>
+                    <p>Clasificación: ${game.esrb_rating ? game.esrb_rating.name : 'No disponible'}</p>
+                    <p>Puntuación: ${game.rating}</p>
+                `;
+            }
+        })
+        .catch(error => console.error('Error al obtener datos de la API:', error));
 });
-
-
-const listaPokemon = document.querySelector("#listaPokemon");
-const botonesHeader = document.querySelectorAll(".btn-header");
-let URL = "https://pokeapi.co/api/v2/pokemon/";
-
-for (let i = 1; i <= 151; i++) {
-    fetch(URL + i)
-        .then((response) => response.json())
-        .then(data => mostrarPokemon(data))
-}
-
-function mostrarPokemon(poke) {
-
-    let tipos = poke.types.map((type) => `<p class="${type.type.name} tipo">${type.type.name}</p>`);
-    tipos = tipos.join('');
-
-    let pokeId = poke.id.toString();
-    if (pokeId.length === 1) {
-        pokeId = "00" + pokeId;
-    } else if (pokeId.length === 2) {
-        pokeId = "0" + pokeId;
-    }
-
-
-    const div = document.createElement("div");
-    div.classList.add("pokemon");
-    div.innerHTML = `
-        <p class="pokemon-id-back">#${pokeId}</p>
-        <div class="pokemon-imagen">
-            <img src="${poke.sprites.other["official-artwork"].front_default}" alt="${poke.name}">
-        </div>
-        <div class="pokemon-info">
-            <div class="nombre-contenedor">
-                <p class="pokemon-id">#${pokeId}</p>
-                <h2 class="pokemon-nombre">${poke.name}</h2>
-            </div>
-            <div class="pokemon-tipos">
-                ${tipos}
-            </div>
-            <div class="pokemon-stats">
-                <p class="stat">${poke.height}m</p>
-                <p class="stat">${poke.weight}kg</p>
-            </div>
-        </div>
-    `;
-    listaPokemon.append(div);
-}
-
-botonesHeader.forEach(boton => boton.addEventListener("click", (event) => {
-    const botonId = event.currentTarget.id;
-
-    listaPokemon.innerHTML = "";
-
-    for (let i = 1; i <= 151; i++) {
-        fetch(URL + i)
-            .then((response) => response.json())
-            .then(data => {
-
-                if(botonId === "ver-todos") {
-                    mostrarPokemon(data);
-                } else {
-                    const tipos = data.types.map(type => type.type.name);
-                    if (tipos.some(tipo => tipo.includes(botonId))) {
-                        mostrarPokemon(data);
-                    }
-                }
-
-            })
-    }
-}))
